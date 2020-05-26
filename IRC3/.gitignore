@@ -1,18 +1,23 @@
-#env
+
+# envs
 .score
 .statedb
 .vscode
 tbearsenv/
 
-#logs
-tbears.log
-rc.log
-
-#configs
+# configs
 tbears_cli_config.json
 tbears_server_config.json
 tbears_testnet_config.json
 
-#keys
+# logs
+rc.log
+tbears.log
+
+# keys
 yeouido1
 yeouido2
+
+# misc
+.DS_Store
+__pycache__

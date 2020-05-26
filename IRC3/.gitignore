@@ -13,6 +13,7 @@ tbears_testnet_config.json
 # logs
 rc.log
 tbears.log
+tbears.log.*
 
 # keys
 yeouido1

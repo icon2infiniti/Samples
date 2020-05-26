@@ -182,7 +182,7 @@ class SampleIrc3(IconScoreBase, TokenStandard):
 
     def _is_zero_address(self, _address: Address) -> bool:
         # Check if address is zero address
-        if _address.body == self._ZERO_ADDRESS.body:
+        if _address == self._ZERO_ADDRESS:
             return True
         return False
 

@@ -17,4 +17,4 @@ $ tbears test sample_irc3
 
 ## References
 
-* [ICON Token Standard](https://github.com/icon-project/IIPs/blob/master/IIPS/iip-3.md)
+* [ICON Non-Fungible Token Standard](https://github.com/icon-project/IIPs/blob/master/IIPS/iip-3.md)

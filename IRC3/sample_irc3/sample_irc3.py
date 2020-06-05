@@ -160,9 +160,8 @@ class SampleIrc3(IconScoreBase, TokenStandard):
     @external
     def mint(self, _to: Address, _tokenId: int):
         # Mint a new NFT token
-        # TODO: UPDATE THIS WHEN BUG IS FIXED
-        # if self.msg.sender != self.owner:
-        #    revert("You don't have permission to mint NFT")
+        if self.msg.sender != self.owner:
+            revert("You don't have permission to mint NFT")
         if _tokenId in self._tokenOwner:
             revert("Token already exists")
         self._add_tokens_to(_to, _tokenId)

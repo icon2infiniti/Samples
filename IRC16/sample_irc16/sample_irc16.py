@@ -149,9 +149,49 @@ class SampleIRC16(IconScoreBase, TokenStandard):
     # Documents
     _DOCUMENT = 'document'
     # Controller (force transfer)
-    #_CONTROLLABLE = 'controllable'
-    #_CONTROLLERS = 'controllers'
+    # _CONTROLLABLE = 'controllable'
+    # _CONTROLLERS = 'controllers'
 
+    _ZERO_ADDRESS = Address.from_prefix_and_int(AddressPrefix.EOA, 0)
+
+    # ======================================================================
+    # Event Logs
+    # ======================================================================
+    @eventlog(indexed=2)
+    def TransferByPartition(self, _partition: str, _operator: Address, _from: Address, _to: Address, _amount: int, _data: bytes):
+        pass
+
+    @eventlog(indexed=3)
+    def IssueByPartition(self, _partition: str, _to: Address, _amount: int, _data: bytes):
+        pass
+
+    @eventlog(indexed=3)
+    def RedeemByPartition(self, _partition: str, _operator: Address, _owner: Address, _amount: int, _data: bytes):
+        pass
+
+    @eventlog(indexed=2)
+    def AuthorizeOperator(self, _operator: Address, _sender: Address):
+        pass
+
+    @eventlog(indexed=2)
+    def RevokeOperator(self, _operator: Address, _sender: Address):
+        pass
+
+    @eventlog(indexed=3)
+    def AuthorizeOperatorForPartition(self, _owner: Address, _partition: str, _operator: Address):
+        pass
+
+    @eventlog(indexed=3)
+    def RevokeOperatorForPartition(self, _owner: Address, _partition: str, _operator: Address):
+        pass
+
+    @eventlog(indexed=3)
+    def SetDocument(self, _name: str, _uri: str, _document_hash: str):
+        pass
+
+    # ======================================================================
+    # SCORE install
+    # ======================================================================
     def __init__(self, db: IconScoreDatabase) -> None:
         super().__init__(db)
         # Token
@@ -167,15 +207,14 @@ class SampleIRC16(IconScoreBase, TokenStandard):
         # Document
         self._document = DictDB(self._DOCUMENT, db, value_type=str, depth=2)
         # Controller (force transfer)
-        #self._controllable = VarDB(self._CONTROLLABLE, db, value_type=bool)
-        #self._controllers = DictDB(self._CONTROLLERS, db, value_type=bool)
+        # self._controllable = VarDB(self._CONTROLLABLE, db, value_type=bool)
+        # self._controllers = DictDB(self._CONTROLLERS, db, value_type=bool)
 
     def on_install(self,
                    name: str,
                    symbol: str,
                    decimals: int,
                    initial_supply: int,
-                   operator: Address,
                    # controllable: bool,
                    ) -> None:
         super().on_install()
@@ -187,7 +226,6 @@ class SampleIRC16(IconScoreBase, TokenStandard):
         self._total_supply.set(total_supply)
         self._decimals.set(decimals)
         # self._controllable.set(controllable)
-        self.authorizeOperator(operator)
 
     def on_update(self) -> None:
         super().on_update()
@@ -365,55 +403,24 @@ class SampleIRC16(IconScoreBase, TokenStandard):
     # Transfer Validity
     # ======================================================================
     @external(readonly=True)
-    def canTransferByPartition(self, _partition: str, _to: Address, _amount: int, _data: bytes = None) -> str:
-        # Define all error codes
-        pass
+    def canTransferByPartition(self, _partition: str, _from: Address, _to: Address, _amount: int, _data: bytes = None) -> str:
+        if not self._partitions[_from][_partition]:
+            return("0x50 Invalid Partition")
+        elif self._partitions[_from][_partition] < _amount:
+            return("0x52 Insufficient Balance")
+        elif _to == self._ZERO_ADDRESS:
+            return("0x57 Invalid Receiver")
+
+        return("0x51 Transfer Successful")
 
     # ======================================================================
     # Misc API
     # ======================================================================
-    """
     @external(readonly=True)
-    def information(self) -> dict:
+    def tokenInfo(self) -> dict:
         return {
             'name': self._name.get(),
             'symbol': self._symbol.get(),
             'total_supply': self._total_supply.get(),
             'decimals': self._decimals.get()
         }
-    """
-
-    # ======================================================================
-    # Event Logs
-    # ======================================================================
-    @eventlog(indexed=2)
-    def TransferByPartition(self, _partition: str, _operator: Address, _from: Address, _to: Address, _amount: int, _data: bytes):
-        pass
-
-    @eventlog(indexed=3)
-    def IssueByPartition(self, _partition: str, _to: Address, _amount: int, _data: bytes):
-        pass
-
-    @eventlog(indexed=3)
-    def RedeemByPartition(self, _partition: str, _operator: Address, _owner: Address, _amount: int, _data: bytes):
-        pass
-
-    @eventlog(indexed=2)
-    def AuthorizeOperator(self, _operator: Address, _sender: Address):
-        pass
-
-    @eventlog(indexed=2)
-    def RevokeOperator(self, _operator: Address, _sender: Address):
-        pass
-
-    @eventlog(indexed=3)
-    def AuthorizeOperatorForPartition(self, _owner: Address, _partition: str, _operator: Address):
-        pass
-
-    @eventlog(indexed=3)
-    def RevokeOperatorForPartition(self, _owner: Address, _partition: str, _operator: Address):
-        pass
-
-    @eventlog(indexed=3)
-    def SetDocument(self, _name: str, _uri: str, _document_hash: str):
-        pass

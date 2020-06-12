@@ -1,0 +1,17 @@
+{
+  "uri": "http://127.0.0.1:9000/api/v3",
+  "nid": "0x3",
+  "keyStore": null,
+  "from": "hx984b11bbcdebb5318965b0db4bbd4d75fda04934",
+  "to": "cx0000000000000000000000000000000000000000",
+  "stepLimit": "0x59682f00",
+  "deploy": {
+    "mode": "install",
+    "scoreParams": {
+      "name": "SampleIRC16",
+      "symbol": "S16",
+      "decimals": "0x18",
+      "initial_supply": "0x0"
+    }
+  }
+}

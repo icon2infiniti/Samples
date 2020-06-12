@@ -25,14 +25,12 @@ class TestTest(IconIntegrateTestBase):
         self.symbol = "STO"
         self.decimals = 18
         self.initial_supply = 0
-        self.operator = self._test1.get_address()
         #self.controllable = 1
         params = {
             'name': self.name,
             'symbol': self.symbol,
             'decimals': self.decimals,
             'initial_supply': self.initial_supply,
-            'operator': self.operator,
             # 'controllable': self.controllable,
         }
         self._score_address = self._deploy_score(params=params)['scoreAddress']

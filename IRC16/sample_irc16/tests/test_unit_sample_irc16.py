@@ -1,6 +1,6 @@
 from ..sample_irc16 import SampleIRC16
 from tbears.libs.scoretest.score_test_case import ScoreTestCase
-from iconservice import Address, IconScoreException
+from iconservice import Address, AddressPrefix, IconScoreException
 
 import hashlib
 
@@ -13,7 +13,6 @@ class TestSampleIRC16(ScoreTestCase):
         self.symbol = "IHT"
         self.decimals = 18
         self.initial_supply = 0
-        self.operator = self.test_account1
         #self.controllable = 1
 
         params = {
@@ -21,7 +20,6 @@ class TestSampleIRC16(ScoreTestCase):
             'symbol': self.symbol,
             'decimals': self.decimals,
             'initial_supply': self.initial_supply,
-            'operator': self.operator,
             # 'controllable': self.controllable,
         }
         self.score = self.get_score_instance(SampleIRC16, self.test_account1, params)
@@ -73,16 +71,11 @@ class TestSampleIRC16(ScoreTestCase):
         self.assertEqual(self.score.balanceOfByPartition("reserved", self.test_account3), 0)
 
     def test_operators(self):
-        self.score.authorizeOperator(self.operator)
-
-        # Case 1: when operator is owner
-        self.assertTrue(self.score.isOperator(self.test_account1, self.test_account1))
-
-        # Case 2: when operator is authorized by owner
+        # When operator is authorized by owner
         self.score.authorizeOperator(self.test_account2)
         self.assertTrue(self.score.isOperator(self.test_account2, self.test_account1))
 
-        # Case 3: when operator is revoked
+        # When operator is revoked
         self.score.revokeOperator(self.test_account2)
         self.assertFalse(self.score.isOperator(self.test_account2, self.test_account1))
 
@@ -127,3 +120,22 @@ class TestSampleIRC16(ScoreTestCase):
         self.score.operatorTransferByPartition("reserved", self.test_account2, self.test_account5, 500, b'transfer 500 reserved token from test_account2 to test_account5 from test_account4')
         self.assertEqual(self.score.balanceOfByPartition("reserved", self.test_account2), 0)
         self.assertEqual(self.score.balanceOfByPartition("reserved", self.test_account5), 500)
+
+    def test_canTransferByPartition(self):
+        self.set_msg(self.test_account1)
+        self.score.issueByPartition("default", self.test_account2, 1000, b'minting 1000 tokens to test_account2 in default partition')
+        self.score.issueByPartition("locked", self.test_account2, 1000, b'minting 1000 tokens to test_account2 in locked partition')
+        self.score.issueByPartition("reserved", self.test_account2, 1000, b'minting 1000 tokens to test_account2 in reserved partition')
+
+        self.set_msg(self.test_account2)
+        reason = self.score.canTransferByPartition("random", self.test_account2, self.test_account3, 1000, None)
+        self.assertEqual(reason, "0x50 Invalid Partition")
+        reason = self.score.canTransferByPartition("default", self.test_account2, self.test_account3, 1001, None)
+        self.assertEqual(reason, "0x52 Insufficient Balance")
+        reason = self.score.canTransferByPartition("default", self.test_account2, Address.from_prefix_and_int(AddressPrefix.EOA, 0), 1000, None)
+        self.assertEqual(reason, "0x57 Invalid Receiver")
+        reason = self.score.canTransferByPartition("default", self.test_account2, self.test_account3, 1000, None)
+        self.assertEqual(reason, "0x51 Transfer Successful")
+
+    def test_api(self):
+        print(self.score.tokenInfo())

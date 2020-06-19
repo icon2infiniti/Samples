@@ -88,8 +88,11 @@ class SampleIrc3(IconScoreBase, TokenStandard):
         """
         self._ensure_positive(_tokenId)
         owner = self._tokenOwner[_tokenId]
-        if owner is None or self._is_zero_address(owner):
-            revert("Invalid owner")
+        if owner is None:
+            revert("Invalid _tokenId. NFT is not minted")
+        if self._is_zero_address(owner):
+            revert("Invalid _tokenId. NFT is burned")
+
         return owner
 
     @external(readonly=True)
@@ -185,7 +188,6 @@ class SampleIrc3(IconScoreBase, TokenStandard):
             return True
         return False
 
-    # @staticmethod
     def _ensure_positive(self, _tokenId: int):
         if _tokenId is None or _tokenId < 0:
             revert("tokenId should be positive")

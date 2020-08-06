@@ -140,7 +140,8 @@ class SampleIRC16(IconScoreBase, TokenStandard):
     _NAME = 'name'
     _SYMBOL = 'symbol'
     _DECIMALS = 'decimals'
-    _TOTAL_SUPPLY = 'total_supply'
+    _TOTAL_SUPPLY = 'total_supply' # Issuance cap
+    _ISSUED_SUPPLY = 'issued_supply' # Issued count
     _BALANCES = 'balances'
     _PARTITIONS = 'partitions'
     # Operators
@@ -199,6 +200,7 @@ class SampleIRC16(IconScoreBase, TokenStandard):
         self._symbol = VarDB(self._SYMBOL, db, value_type=str)
         self._decimals = VarDB(self._DECIMALS, db, value_type=int)
         self._total_supply = VarDB(self._TOTAL_SUPPLY, db, value_type=int)
+        self._issued_supply = VarDB(self._ISSUED_SUPPLY, db, value_type=int)
         self._balances = DictDB(self._BALANCES, db, value_type=int)
         self._partitions = DictDB(self._PARTITIONS, db, value_type=int, depth=2)
         # Operators
@@ -214,16 +216,17 @@ class SampleIRC16(IconScoreBase, TokenStandard):
                    name: str,
                    symbol: str,
                    decimals: int,
-                   initial_supply: int,
+                   total_supply: int,
                    # controllable: bool,
                    ) -> None:
         super().on_install()
 
-        total_supply = initial_supply * 10 ** decimals
+        total_supply = total_supply * 10 ** decimals 
 
         self._name.set(name)
         self._symbol.set(symbol)
         self._total_supply.set(total_supply)
+        self._issued_supply.set(0)
         self._decimals.set(decimals)
         # self._controllable.set(controllable)
 
@@ -365,11 +368,14 @@ class SampleIRC16(IconScoreBase, TokenStandard):
             revert('Only owner of the contract can issue new tokens')
         if _amount <= 0:
             revert('Invalid amount')
+        if self._issued_supply.get() + _amount > self._total_supply.get():
+            revert('Cap reached, available tokens: ' + str(self._total_supply.get()-self._issued_supply.get()))
 
         self._issueByPartition(_partition, _to, _amount, _data)
 
     def _issueByPartition(self, _partition: str, _to: Address, _amount: int, _data: bytes) -> None:
-        self._total_supply.set(self._total_supply.get() + _amount)
+        #self._total_supply.set(self._total_supply.get() + _amount)
+        self._issued_supply.set(self._issued_supply.get() + _amount)
         self._balances[_to] = self._balances[_to] + _amount
         self._partitions[_to][_partition] = self._partitions[_to][_partition] + _amount
         data = b'Issue by partition' if _data is None else _data
@@ -393,7 +399,8 @@ class SampleIRC16(IconScoreBase, TokenStandard):
         if _amount <= 0 or self._partitions[_owner][_partition] < _amount:
             revert("Invalid amount")
 
-        self._total_supply.set(self._total_supply.get() - _amount)
+        #self._total_supply.set(self._total_supply.get() - _amount)
+        self._issued_supply.set(self._issued_supply.get() - _amount)
         self._partitions[_owner][_partition] -= _amount
         self._balances[_owner] -= _amount
         data = b'Redeem by partition' if _data is None else _data
@@ -424,3 +431,7 @@ class SampleIRC16(IconScoreBase, TokenStandard):
             'total_supply': self._total_supply.get(),
             'decimals': self._decimals.get()
         }
+
+    @external(readonly=True)
+    def issuedSupply(self) -> int:
+        return self._issued_supply.get()

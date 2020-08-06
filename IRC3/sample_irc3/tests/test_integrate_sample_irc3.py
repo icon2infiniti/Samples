@@ -210,4 +210,4 @@ class TestTest(IconIntegrateTestBase):
         with self.assertRaises(IconScoreException) as e:
             self.process_call(call, self.icon_service)
         self.assertEqual(e.exception.code, 32)
-        self.assertEqual(e.exception.message, "Invalid owner")
+        self.assertEqual(e.exception.message, "Invalid _tokenId. NFT is burned")

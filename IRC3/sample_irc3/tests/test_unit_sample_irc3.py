@@ -21,12 +21,15 @@ class TestSampleIrc3(ScoreTestCase):
         self.set_msg(self.test_account1)
         self.score.mint(self.test_account1, 1)
         self.assertEqual(self.score.ownerOf(1), self.test_account1)
+        self.assertEqual(self.score.balanceOf(self.test_account1), 1)
 
     def test_set_transfer(self):
         self.set_msg(self.test_account1)
         self.score.mint(self.test_account1, 1)
         self.score.transfer(self.test_account2, 1)
         self.assertEqual(self.score.ownerOf(1), self.test_account2)
+        self.assertEqual(0, self.score.balanceOf(self.test_account1))
+        self.assertEqual(1, self.score.balanceOf(self.test_account2))
 
     def test_set_approve(self):
         self.set_msg(self.test_account1)
@@ -39,6 +42,8 @@ class TestSampleIrc3(ScoreTestCase):
         self.score.mint(self.test_account1, 1)
         self.score.transferFrom(self.test_account1, self.test_account2, 1)
         self.assertEqual(self.score.ownerOf(1), self.test_account2)
+        self.assertEqual(0, self.score.balanceOf(self.test_account1))
+        self.assertEqual(1, self.score.balanceOf(self.test_account2))
 
     def test_get_balanceOf(self):
         self.set_msg(self.test_account1)
@@ -57,7 +62,7 @@ class TestSampleIrc3(ScoreTestCase):
         with self.assertRaises(IconScoreException) as e:
             self.score.ownerOf(1)
         self.assertEqual(e.exception.code, 32)
-        self.assertEqual(e.exception.message, "Invalid owner")
+        self.assertEqual(e.exception.message, "Invalid _tokenId. NFT is burned")
         self.assertEqual(self.score.balanceOf(self.test_account1), 0)
 
     def test_error_transfer(self):
@@ -68,3 +73,9 @@ class TestSampleIrc3(ScoreTestCase):
             self.score.transferFrom(self.test_account1, self.test_account2, 2)
         self.assertEqual(e.exception.code, 32)
         self.assertEqual(e.exception.message, "You don't have permission to transfer this NFT")
+
+    def test_erro_ownerOf(self):
+        with self.assertRaises(IconScoreException) as e:
+            self.score.ownerOf(2)
+        self.assertEqual(e.exception.code, 32)
+        self.assertEqual(e.exception.message, "Invalid _tokenId. NFT is not minted")
